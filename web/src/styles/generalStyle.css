@@ -1,0 +1,10 @@
+.general-component {
+  @apply rounded-md border-component-border-black border-y-2 shadow-md bg-component-background;
+}
+
+.hidden {
+  @apply max-h-0 overflow-hidden transition-all duration-500 ease-in-out;
+}
+.visible {
+  @apply max-h-screen transition-all duration-500 ease-in-out;
+}
