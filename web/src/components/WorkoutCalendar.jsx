@@ -1,19 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import AuthContext from "@/contexts/AuthContext";
+
 import dynamic from "next/dynamic";
 import styles from "../styles/Calendar.module.css";
 import axios from "axios";
+import { useGetRequest, useDeleteRequest } from "@/customHooks/useApiHooks";
 import AddWorkoutModal from "./AddWorkoutModal";
 
 const Calendar = dynamic(() => import("react-calendar"), { ssr: false });
 
 export default function WorkoutCalendar() {
-    let userId = 1; //TODO: Get the user id from the logged in user
+    const { accessToken, userId } = useContext(AuthContext);
     const [clickedDate, setClickedDate] = useState(
         new Date().toISOString().split("T")[0]
     );
     const [allWorkoutDates, setAllWorkoutDates] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [fetchfailed, setFetchfailed] = useState(false);
+    const { sendRequest, isLoading, error, data } = useGetRequest(
+        userId,
+        accessToken
+    );
+    const { sendDeleteRequest, deleteError, deleteData } = useDeleteRequest(
+        userId,
+        accessToken
+    );
+
     const [showCalendar, setShowCalendar] = useState(true);
 
     const [showModal, setShowModal] = useState(false);
@@ -23,44 +33,71 @@ export default function WorkoutCalendar() {
     //Fetch the users workout dates from the API to be used in the calendar
     const getWorkoutDates = async () => {
         try {
-            const response = await axios.get(
+            const data = await sendRequest(
                 `https://localhost:7127/api/Users/${userId}/workout/dates/all`
             );
-            setAllWorkoutDates(
-                response.data.$values.map(
-                    (date) => new Date(date).toISOString().split("T")[0]
-                )
-            );
-            setLoading(false);
+            if (data) {
+                setAllWorkoutDates(
+                    data.$values.map(
+                        (date) => new Date(date).toISOString().split("T")[0]
+                    )
+                );
+            }
         } catch (error) {
-            // console.error(error);
-            setLoading(false);
-            setFetchfailed(true);
+            console.error(error);
         }
     };
 
     //Fetch the workout for the selected date
+    //Bug: När jag försöker implementera UseApiHooks på denna så startar
+    // jag en re-render av kalendern som sabbar userexperience. Uppdaterar detta senare
     const getWorkoutForSelectedDate = async (userId, date) => {
         try {
-            const response = await axios
-                .get(
-                    `https://localhost:7127/api/Workouts/${userId}/date/${date}`
-                )
-                .then((response) => {
-                    setWorkoutForSelectedDate(response.data);
-                });
+            const response = await axios.get(
+                `https://localhost:7127/api/Workouts/${userId}/date/${date}`,
+                {
+                    headers: accessToken
+                        ? { Authorization: `Bearer ${accessToken}` }
+                        : {},
+                }
+            );
+            setWorkoutForSelectedDate(response.data);
         } catch (error) {
             setWorkoutForSelectedDate([]);
         }
     };
 
+    //Delete a workout exercise from the workout
+    const deleteWorkoutExercise = (workoutExerciseId) => async () => {
+        try {
+            const response = await sendDeleteRequest(
+                `https://localhost:7127/api/Workouts/${userId}/deleteWorkoutExercise/${workoutExerciseId}/date/${clickedDate}`,
+                {
+                    headers: accessToken
+                        ? { Authorization: `Bearer ${accessToken}` }
+                        : {},
+                }
+            );
+            getWorkoutForSelectedDate(userId, clickedDate);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     useEffect(() => {
-        getWorkoutDates();
-        getWorkoutForSelectedDate(userId, clickedDate);
-    }, []);
+        if (userId) {
+            getWorkoutDates();
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        if (userId) {
+            getWorkoutForSelectedDate(userId, clickedDate);
+        }
+    }, [userId, clickedDate]);
 
     return (
-        <>
+        <div className="">
             <button
                 className="w-full font-bold py-4 general-component"
                 onClick={() => setShowCalendar(!showCalendar)}
@@ -69,52 +106,50 @@ export default function WorkoutCalendar() {
             </button>
             {showCalendar && (
                 <div className="">
-                    {loading && ( // Render a loading message while the data is being fetched
+                    {isLoading && ( // Render a loading message while the data is being fetched
                         <div className="flex justify-center items-center">
                             <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-l-2 border-cyan-500"></div>
                         </div>
                     )}
 
-                    {!loading &&
-                        !fetchfailed && ( // Render the calendar if the data was fetched successfully
-                            <Calendar
-                                showWeekNumbers={true}
-                                value={clickedDate}
-                                className={`${styles.calendar} mx-auto`}
-                                onClickDay={(value) => {
-                                    let localDate = new Date(
-                                        value.getTime() -
-                                            value.getTimezoneOffset() * 60000
-                                    );
-                                    let dateString = localDate
-                                        .toISOString()
-                                        .split("T")[0];
-                                    setClickedDate(dateString);
-                                    getWorkoutForSelectedDate(
-                                        userId,
-                                        dateString
-                                    );
-                                }}
-                                tileClassName={({ date, view }) =>
-                                    view === "month" &&
-                                    allWorkoutDates.find(
-                                        //split the datetime string to only compare the date
-                                        (workoutDate) =>
-                                            workoutDate ===
-                                            date.toISOString().split("T")[0]
-                                    )
-                                        ? styles["has-workout"]
-                                        : ""
-                                }
-                            />
-                        )}
-                    {fetchfailed && ( //Render an error message if the data failed to fetch
+                    {!isLoading && ( // Render the calendar if the data was fetched successfully
+                        // !fetchfailed &&
+                        <Calendar
+                            showWeekNumbers={true}
+                            value={clickedDate}
+                            className={`${styles.calendar} mx-auto`}
+                            onClickDay={(value) => {
+                                let localDate = new Date(
+                                    value.getTime() -
+                                        value.getTimezoneOffset() * 60000
+                                );
+                                let dateString = localDate
+                                    .toISOString()
+                                    .split("T")[0];
+                                setClickedDate(dateString);
+                                getWorkoutForSelectedDate(userId, dateString);
+                            }}
+                            tileClassName={({ date, view }) =>
+                                view === "month" &&
+                                allWorkoutDates.find(
+                                    //split the datetime string to only compare the date
+                                    (workoutDate) =>
+                                        workoutDate ===
+                                        date.toISOString().split("T")[0]
+                                )
+                                    ? styles["has-workout"]
+                                    : ""
+                            }
+                        />
+                    )}
+                    {/* {fetchfailed && ( //Render an error message if the data failed to fetch
                         <div className="flex justify-center items-center">
                             <p className="text-red-500 text-2xl">
                                 Failed to fetch workout dates
                             </p>
                         </div>
-                    )}
+                    )} */}
+                    {/* Render the add workout button if a date is selected */}
                     {clickedDate && (
                         <>
                             <div className="general-component mt-4">
@@ -131,11 +166,13 @@ export default function WorkoutCalendar() {
                                 {showModal && (
                                     <AddWorkoutModal
                                         userId={userId}
+                                        accessToken={accessToken}
                                         date={clickedDate}
                                         onModalClose={() => setShowModal(false)}
                                     />
                                 )}
 
+                                {/* Render the workout for the selected date */}
                                 {clickedDate &&
                                     workoutForSelectedDate?.exercises && (
                                         <div className="py-4 general-component">
@@ -145,28 +182,38 @@ export default function WorkoutCalendar() {
                                                         exerciseName,
                                                         sets,
                                                         reps,
+                                                        workoutExerciseId,
                                                     } = exercise;
                                                     return (
-                                                        <div key={index}>
-                                                            <p>
-                                                                <span className="font-bold">
-                                                                    {
-                                                                        exerciseName
-                                                                    }
-                                                                </span>
-                                                                {": "}
-                                                                {sets}
-                                                                {exerciseName ==
-                                                                "Löpning"
-                                                                    ? "km "
-                                                                    : "Set "}
-                                                                {reps}
-                                                                {exerciseName ==
-                                                                "Löpning"
-                                                                    ? "min"
-                                                                    : "Rep"}
-                                                            </p>
-                                                        </div>
+                                                        <p
+                                                            className="relative z-0"
+                                                            key={
+                                                                workoutExerciseId
+                                                            }
+                                                        >
+                                                            <span className="font-bold">
+                                                                {exerciseName}
+                                                            </span>
+                                                            {": "}
+                                                            {sets}
+                                                            {exerciseName ==
+                                                            "Löpning"
+                                                                ? "km "
+                                                                : "Set "}
+                                                            {reps}
+                                                            {exerciseName ==
+                                                            "Löpning"
+                                                                ? "min"
+                                                                : "Rep"}
+                                                            <span
+                                                                className="cursor-pointer font-bold absolute right-8 z-0"
+                                                                onClick={deleteWorkoutExercise(
+                                                                    workoutExerciseId
+                                                                )}
+                                                            >
+                                                                X
+                                                            </span>
+                                                        </p>
                                                     );
                                                 }
                                             )}
@@ -177,6 +224,6 @@ export default function WorkoutCalendar() {
                     )}
                 </div>
             )}
-        </>
+        </div>
     );
 }

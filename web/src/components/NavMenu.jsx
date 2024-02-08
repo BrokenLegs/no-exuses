@@ -1,23 +1,19 @@
 import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 
-export default function NavMenu() {
-    const router = useRouter();
+export default function NavMenu({ currentPath }) {
     return (
-        <div className="absolute w-full bottom-0 flex gap-2 h-20 bg-black bg-opacity-70 text-#f5f4f1 justify-evenly items-center">
+        <div className="w-full sticky bottom-0 flex h-16 bg-black bg-opacity-80 text-#f5f4f1 justify-evenly items-center">
             <Link href="/activityLog">
                 <div
                     className={`transition-all duration-150 ease-in-out ${
-                        router.pathname === "/activityLog"
-                            ? "w-14 h-14"
-                            : "w-10 h-10"
+                        currentPath === "/activityLog" ? "w-12 h-12" : "w-8 h-8"
                     }`}
                 >
                     <svg
                         className="w-full h-full"
                         fill={
-                            router.pathname === "/activityLog"
+                            currentPath === "/activityLog"
                                 ? "#d4eaf7"
                                 : "#f5f4f1"
                         }
@@ -31,17 +27,13 @@ export default function NavMenu() {
             <Link href="/library">
                 <div
                     className={`transition-all duration-150 ease-in-out ${
-                        router.pathname === "/library"
-                            ? "w-14 h-14"
-                            : "w-10 h-10"
+                        currentPath === "/library" ? "w-12 h-12" : "w-8 h-8"
                     }`}
                 >
                     <svg
                         className="w-full h-full"
                         fill={
-                            router.pathname === "/library"
-                                ? "#d4eaf7"
-                                : "#f5f4f1"
+                            currentPath === "/library" ? "#d4eaf7" : "#f5f4f1"
                         }
                         viewBox="0 0 500 500"
                     >
@@ -60,7 +52,7 @@ export default function NavMenu() {
 		v-68.511h78.448V193.605z M138.817,143.682H60.23v-18.588h78.587V143.682z M60.23,157.682h78.587v18.599H60.23V157.682z
 		 M152.817,241.097h78.448v190.533h-78.448V241.097z M157.422,59.108h69.24c2.538,0,4.604,2.069,4.604,4.613v47.372h-78.448V63.722
 		C152.817,61.178,154.883,59.108,157.422,59.108z M64.855,59.108h69.322c2.559,0,4.64,2.069,4.64,4.613v47.372H60.23V63.722
-		C60.23,61.178,62.306,59.108,64.855,59.108z M60.23,190.281h78.587v241.349H60.23V190.281z"
+		C60.23,61.178,62.306,59.108,64.855,59.108z M60.23,190.281h78.587v241.349H60.23V190.281"
                             />
                         </g>
                     </svg>
@@ -69,14 +61,12 @@ export default function NavMenu() {
             <Link href="/user">
                 <div
                     className={`transition-all duration-150 ease-in-out ${
-                        router.pathname === "/user" ? "w-14 h-14" : "w-10 h-10"
+                        currentPath === "/user" ? "w-12 h-12" : "w-8 h-8"
                     }`}
                 >
                     <svg
                         className="w-full h-full"
-                        fill={
-                            router.pathname === "/user" ? "#d4eaf7" : "#f5f4f1"
-                        }
+                        fill={currentPath === "/user" ? "#d4eaf7" : "#f5f4f1"}
                         viewBox="0 0 30.586 30.586"
                     >
                         <g transform="translate(-546.269 -195.397)">

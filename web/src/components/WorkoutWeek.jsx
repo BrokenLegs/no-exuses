@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState, useContext } from "react";
+import { useGetRequest } from "@/customHooks/useApiHooks";
+import AuthContext from "@/contexts/AuthContext";
 
 export default function WorkoutWeek() {
-    const [loading, setLoading] = useState(true);
+    const { accessToken, userId } = useContext(AuthContext);
     const [fetchFailed, setFetchFailed] = useState(false);
     const [weeksWorkouts, setWeeksWorkout] = useState([]);
     const [showWorkoutWeek, setShowWorkoutWeek] = useState(false);
 
-    const [userId, setUserId] = useState(1); // TODO: Get user id from context
+    const { sendRequest, isLoading, error, data } = useGetRequest(
+        userId,
+        accessToken
+    );
+
     const [year, setYear] = useState(new Date().getFullYear());
     const [week, setWeek] = useState(getCurrentWeekNumber());
 
@@ -21,13 +26,13 @@ export default function WorkoutWeek() {
         "Sunday",
     ];
     const daysOfWeekNumbers = {
-        Monday: 0,
-        Tuesday: 1,
-        Wednesday: 2,
-        Thursday: 3,
-        Friday: 4,
-        Saturday: 5,
-        Sunday: 6,
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6,
     };
 
     function getCurrentWeekNumber() {
@@ -43,26 +48,22 @@ export default function WorkoutWeek() {
 
     const getWeeksWorkout = async (userId, year, week) => {
         try {
-            await axios
-                .get(
-                    `https://localhost:7127/api/Users/${userId}/workout/year/${year}/week/${week}`
-                )
-                .then((response) => {
-                    setWeeksWorkout(response.data.$values);
-                    setLoading(false);
-                    console.log(response.data.$values);
-                });
+            const data = await sendRequest(
+                `https://localhost:7127/api/Users/${userId}/workout/year/${year}/week/${week}`
+            );
+            if (data) {
+                setWeeksWorkout(data.$values);
+                setFetchFailed(false);
+            }
         } catch (error) {
             setFetchFailed(true);
-            setLoading(false);
             console.error(error);
         }
     };
 
     useEffect(() => {
         getWeeksWorkout(userId, year, week);
-        console.log(week);
-    }, []);
+    }, [userId]);
 
     return (
         <div className="general-component py-4 ">
@@ -78,13 +79,13 @@ export default function WorkoutWeek() {
             showWorkoutWeek ? "hidden-transition" : "visible-transition"
         }`}
             >
-                {loading && (
+                {isLoading && (
                     <div className="text-secondary-text col-span-full">
                         ...Laddar in veckans pass
                     </div>
                 )}
                 {fetchFailed && (
-                    <div className="text-red-500 basis-full">
+                    <div className="text-red-500 md:col-span-7">
                         Failed to fetch data
                     </div>
                 )}
@@ -92,29 +93,25 @@ export default function WorkoutWeek() {
                 {daysOfWeek.map((day) => (
                     <div className="text-secondary-text " key={day}>
                         <h3 className="font-bold my-2">{day}</h3>
-                        {weeksWorkouts.map((workoutday) => {
-                            // Create a new Date object from workoutday.date
-                            let workoutDate = new Date(workoutday.date);
-                            // Get the day of the week as a number (0 for Sunday, 1 for Monday, etc.)
-                            let workoutDayOfWeek = workoutDate.getDay();
+                        {weeksWorkouts &&
+                            weeksWorkouts.map((workoutday) => {
+                                // Create a new Date object from workoutday.date
+                                let workoutDate = new Date(workoutday.date);
+                                // Get the day of the week as a number (0 for Sunday, 1 for Monday, etc.)
+                                let workoutDayOfWeek = workoutDate.getDay();
 
-                            // Check if workoutDayOfWeek is the same as the current day
-                            if (
-                                workoutDayOfWeek - 1 ===
-                                daysOfWeekNumbers[day]
-                            ) {
-                                return (
-                                    <p
-                                        key={
-                                            day + " " + workoutday.exerciseName
-                                        }
-                                    >
-                                        {workoutday.exerciseName}
-                                    </p>
-                                );
-                            }
-                            return null; // Return null if the days don't match
-                        })}
+                                // Check if workoutDayOfWeek is the same as the current day
+                                if (
+                                    workoutDayOfWeek === daysOfWeekNumbers[day]
+                                ) {
+                                    return (
+                                        <p key={workoutday.workoutExerciseId}>
+                                            {workoutday.exerciseName}
+                                        </p>
+                                    );
+                                }
+                                return null; // Return null if the days don't match
+                            })}
                     </div>
                 ))}
             </div>

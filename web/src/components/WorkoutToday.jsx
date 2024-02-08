@@ -7,11 +7,12 @@ export default function WorkoutToday() {
     const [loading, setLoading] = useState(true); // Add a loading state
     const [fetchFailed, setFetchFailed] = useState(false); // Add a loading state
     const [todaysWorkout, setTodaysWorkout] = useState([]);
+    let userId = 1; //TODO: Get the user id from the logged in user
 
     const getTodaysWorkout = async () => {
         try {
             const response = await axios
-                .get("https://localhost:7127/api/Users/1/workout/today")
+                .get(`https://localhost:7127/api/Users/${userId}/workout/today`)
                 .then((response) => {
                     setTodaysWorkout(response.data.$values);
                     setLoading(false);
