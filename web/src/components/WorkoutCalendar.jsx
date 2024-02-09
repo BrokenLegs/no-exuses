@@ -175,7 +175,7 @@ export default function WorkoutCalendar() {
                                 {/* Render the workout for the selected date */}
                                 {clickedDate &&
                                     workoutForSelectedDate?.exercises && (
-                                        <div className="py-4 general-component">
+                                        <div className="py-4 general-component flex flex-col text-center justify-center">
                                             {workoutForSelectedDate.exercises.map(
                                                 (exercise, index) => {
                                                     const {
@@ -185,35 +185,39 @@ export default function WorkoutCalendar() {
                                                         workoutExerciseId,
                                                     } = exercise;
                                                     return (
-                                                        <p
-                                                            className="relative z-0"
+                                                        <article
+                                                            className="grid grid-cols-3 items-center"
                                                             key={
                                                                 workoutExerciseId
                                                             }
                                                         >
-                                                            <span className="font-bold">
-                                                                {exerciseName}
-                                                            </span>
-                                                            {": "}
-                                                            {sets}
-                                                            {exerciseName ==
-                                                            "Löpning"
-                                                                ? "km "
-                                                                : "Set "}
-                                                            {reps}
-                                                            {exerciseName ==
-                                                            "Löpning"
-                                                                ? "min"
-                                                                : "Rep"}
+                                                            <p className="col-start-2">
+                                                                <span className="font-bold">
+                                                                    {
+                                                                        exerciseName
+                                                                    }
+                                                                </span>
+                                                                {": "}
+                                                                {sets}
+                                                                {exerciseName ==
+                                                                "Löpning"
+                                                                    ? "km "
+                                                                    : "Set "}
+                                                                {reps}
+                                                                {exerciseName ==
+                                                                "Löpning"
+                                                                    ? "min"
+                                                                    : "Rep"}
+                                                            </p>
                                                             <span
-                                                                className="cursor-pointer font-bold absolute right-8 z-0"
+                                                                className="ml-auto cursor-pointer font-bold mr-10 text-4xl"
                                                                 onClick={deleteWorkoutExercise(
                                                                     workoutExerciseId
                                                                 )}
                                                             >
-                                                                X
+                                                                -
                                                             </span>
-                                                        </p>
+                                                        </article>
                                                     );
                                                 }
                                             )}

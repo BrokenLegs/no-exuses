@@ -209,11 +209,12 @@ export default function library() {
                             ))}
                         </section>
 
-                        <fieldset className="grid grid-cols-4 gap-2 mt-4">
+                        <fieldset className="grid grid-cols-4 gap-2 mt-4 relative">
                             <legend className="font-bold text-sm text-left ">
                                 Exercises
                             </legend>
                             {/* List of exercises */}
+
                             {searchFilter &&
                                 exerciseList &&
                                 exerciseList.map(({ exerciseId, name }) => (
@@ -229,6 +230,9 @@ export default function library() {
                                     </button>
                                 ))}
                             {/* Exercise details */}
+                            {isLoading && (
+                                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-l-2 border-cyan-500 translate-x-1/2 translate-y-1/2 absolute"></div>
+                            )}
                             {selectedExerciseId &&
                                 isModalOpen && ( // Only render the ExerciseDetailsModal component if an exercise is selected
                                     <ExerciseDetailsModal

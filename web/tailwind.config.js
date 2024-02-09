@@ -26,6 +26,7 @@ module.exports = {
         'background-3': '#d4eaf7',
         'background-4': '#b6ccd8',
         'background-5': '#00668c',
+
         // temat ovan, sorterat som det skall vara
         // --primary-100:#d4eaf7;
         // --primary-200:#b6ccd8;
@@ -51,6 +52,19 @@ module.exports = {
         // --bg-100:#1E1E1E;
         // --bg-200:#2d2d2d;
         // --bg-300:#454545;
+
+        // Mörk, Orange, blå tema
+        // --primary-100:#FF6600;
+        // --primary-200:#ff983f;
+        // --primary-300:#ffffa1;
+        // --accent-100:#00CCFF;
+        // --accent-200:#006c9b;
+        // --text-100:#FFFFFF;
+        // --text-200:#e0e0e0;
+        // --bg-100:#1A1A1A;
+        // --bg-200:#292929;
+        // --bg-300:#404040;
+
 
 
       },
